@@ -33,13 +33,24 @@ namespace BitTorrent
 					case DictionaryStart:
 						Console.WriteLine("| DICTIONARY |");
 						data = DecodeDictionary(memStream);
+						foreach (var item in (Dictionary<string, object>)data)
+						{
+							Console.WriteLine($"	DATA: { item }");
+						}
 						break;
 					case NumberStart:
 						Console.WriteLine("| NUMBER |");
 						data = DecodeNumber(memStream);
+						Console.WriteLine($"DATA: { data }");
+
 						break;
 					case ListStart:
 						Console.WriteLine("| LIST |");
+						data = DecodeList(memStream);
+						foreach (var item in (List<object>)data)
+						{
+							Console.WriteLine($"	DATA: { item }");
+						}
 						break;
 
 					case '0':
@@ -54,6 +65,7 @@ namespace BitTorrent
 					case '9':
 						Console.WriteLine("| STRING |");
 						data = DecodeString(memStream, b - '0');
+						Console.WriteLine($"DATA: { data }");
 						break;
 
 					default:
@@ -66,16 +78,16 @@ namespace BitTorrent
 			return data;
 		}
 		
-		private static Dictionary<string, object> DecodeDictionary(MemoryStream memoryStream)
+		private static Dictionary<string, object> DecodeDictionary(MemoryStream memStream)
 		{
 			Dictionary<string, object> dict = new();
 			List<string> keys = new();
 
 			int b;
-			while ((b = memoryStream.ReadByte()) != -1 && b != End)
+			while ((b = memStream.ReadByte()) != -1 && b != End)
 			{
-				string key = DecodeString(memoryStream, b - '0');
-				object val = Decode(memoryStream);
+				string key = DecodeString(memStream, b - '0');
+				object val = Decode(memStream);
 
 				keys.Add(key);
 				dict.Add(key, val);
@@ -86,6 +98,19 @@ namespace BitTorrent
 				throw new Exception("error loading dictionary: keys not sorted");
 
 			return dict;
+		}
+
+		private static List<object> DecodeList(MemoryStream memStream)
+		{
+			List<object> list = new();
+
+			int b;
+			while ((b = memStream.ReadByte()) != -1 && b != End)
+			{
+				list.Add(Decode(memStream));
+			}
+
+			return list;
 		}
 
 		private static string DecodeString(MemoryStream memStream, int length)
