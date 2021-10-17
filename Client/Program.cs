@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using BitTorrent;
 
 namespace Client
 {
@@ -8,10 +6,7 @@ namespace Client
 	{
 		static void Main(string[] args)
 		{
-			if (args.Length > 0)
-			{
-				BEncoding.Decode(File.ReadAllBytes(args[0]));
-			}
+			Console.WriteLine("Hello!");
 		}
 	}
 }
