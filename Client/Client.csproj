@@ -10,4 +10,8 @@
     <PackageReference Include="MonoTorrent" Version="2.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Client.Downloader\Client.Downloader.csproj" />
+  </ItemGroup>
+
 </Project>
