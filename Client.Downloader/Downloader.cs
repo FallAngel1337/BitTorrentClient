@@ -47,7 +47,7 @@ namespace Client.Downloader
 		}
 
 		// Just works with CLI
-		public async Task StartDownloadAsync(string torrent_file)
+		public async Task StartDownloadAsync()
 		{
 			if (!Ready)
 			{

@@ -20,7 +20,7 @@ namespace Client
 		public bool Verbose { get; set; } = false;
 
 		[Option('l', "load", Required = true, HelpText = "The torrent file/link/hash")]
-		public string Torrent { get; set; } = null;
+		public string Torrent { get; set; }
 
 		[Option('d', "path", Required = false, HelpText = "Download path")]
 		public string Download { get; set; } = Environment.CurrentDirectory;
@@ -42,7 +42,8 @@ namespace Client
 			DownloaderConfig  config = new(opts.Download, opts.Verbose, settings);
 			TorrentDownloader downloader = new(config);
 
-			await downloader.StartDownloadAsync(opts.Torrent);
+			await downloader.SetupDownload(opts.Torrent);
+			await downloader.StartDownloadAsync();
 		}
 
 		static void HandleNotParsed(IEnumerable<Error> error)
