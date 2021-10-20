@@ -35,13 +35,13 @@ namespace Client.GUI
 		{
 			System.Windows.Forms.FileDialog openFileDlg = new System.Windows.Forms.OpenFileDialog();
 			var result = openFileDlg.ShowDialog();
+			var progress = new Progress<DownloadInfo[]>((a) => informationDisplay.ItemsSource = a);
 
 			if (result.ToString() != string.Empty)
 			{
 				try
 				{
-					await StartGUIDownloadAsync(openFileDlg.FileName);
-					informationDisplay.ItemsSource = DownloadInfos.ToArray();
+					await Task.Factory.StartNew(() => StartGUIDownloadAsync(openFileDlg.FileName, progress), TaskCreationOptions.LongRunning);
 				}
 				catch (Exception ex)
 				{
@@ -51,27 +51,33 @@ namespace Client.GUI
 
 		}
 
-		private async Task StartGUIDownloadAsync(string torrent_file)
+		private async Task StartGUIDownloadAsync(string torrent, IProgress<DownloadInfo[]> progress)
 		{
-			TorrentDownloader torrentDownloader = new();
-			await torrentDownloader.SetupDownload(torrent_file);
 
-			await torrentDownloader.Manager.StartAsync();
+			TorrentDownloader downloader = new();
+			await downloader.SetupDownload(torrent);
+
+			await downloader.Manager.StartAsync();
+
 			DownloadInfos.Add(new DownloadInfo
 			{
-				FileName = torrentDownloader.TorrentFile.Name,
-				Size = torrentDownloader.TorrentFile.Size,
+				FileName = downloader.TorrentFile.Name,
+				Size = downloader.TorrentFile.Size,
 				Progress = 0, //  stuck in 0% for testing
-				DownloadSpeed = torrentDownloader.Engine.TotalDownloadSpeed / 1024,
-				UploadSpeed = torrentDownloader.Engine.TotalUploadSpeed / 1024
+				DownloadSpeed = 0,
+				UploadSpeed = 0
 			});
 
-			System.Windows.MessageBox.Show("WAIT!");
-
-			//while (torrentDownloader.Engine.IsRunning)
-			//{
-			//	// wait till it's over
-			//}
+			// TODO: IMPROVE THIS ASAP (but it's working =])
+			int i = 0;
+			while (downloader.Engine.IsRunning)
+			{
+				DownloadInfos[i % DownloadInfos.Count].DownloadSpeed = downloader.Engine.TotalDownloadSpeed / 1024;
+				DownloadInfos[i++ % DownloadInfos.Count].UploadSpeed = downloader.Engine.TotalUploadSpeed / 1024;
+				
+				Task.Delay(1000).Wait();
+				progress.Report(DownloadInfos.ToArray());
+			}
 		}
 
 		private void OpenMagnetLinkOption_Click(object sender, RoutedEventArgs e)
