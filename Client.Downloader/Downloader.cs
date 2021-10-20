@@ -77,8 +77,8 @@ namespace Client.Downloader
 		public async Task SetupDownload(string torrent)
 		{
 			TorrentPath = torrent;
-			TorrentFile = Torrent.Load(TorrentPath);
-			Manager = await Engine.AddAsync(torrent, Config.DownloadPath);
+			TorrentFile = await Torrent.LoadAsync(TorrentPath);
+			Manager = await Engine.AddAsync(TorrentPath, Config.DownloadPath);
 
 			Ready = true;
 		}
