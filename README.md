@@ -16,6 +16,18 @@ Both are independent, they're just different interfaces for the program.
   * From source:
  
     **Note:** Before installing chekc the [dependencies](#dependencies)
+    ```
+    $ git clone git@github.com:FallAngel1337/BitTorrentClient.git
+    $ cd BitTorrentClient/
+    ```
+    * Compiling the Core app:
+    ```
+    $ cd Client/
+    $ dotnet publish -o <output_dir>
+    $ cd -o <output_dir>
+    $ dotnet run Client.dll --help # For Linux
+    $ ./Client.exe --help # For Windows
+    ```
     
   * From binary:
   
