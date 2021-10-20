@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31702.278
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Client\Client.csproj", "{C4AD7414-CB92-4091-A721-D90728B0EC32}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client.Core", "Client\Client.Core.csproj", "{C4AD7414-CB92-4091-A721-D90728B0EC32}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client.Downloader", "Client.Downloader\Client.Downloader.csproj", "{58FE05B7-1E93-4132-BA6B-6EAD1C89F75B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client.GUI", "Client.GUI\Client.GUI.csproj", "{07D572C3-1E72-4C53-87C9-A296B3A937A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client.GUI", "Client.GUI\Client.GUI.csproj", "{07D572C3-1E72-4C53-87C9-A296B3A937A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
