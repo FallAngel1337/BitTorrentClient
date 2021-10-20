@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using MonoTorrent;
 using MonoTorrent.Client;
 using System.Threading.Tasks;
+using MonoTorrent.BEncoding;
 
 namespace Client.Downloader
 {
@@ -24,8 +25,14 @@ namespace Client.Downloader
 
 	public class TorrentDownloader
 	{
-		private readonly ClientEngine Engine;
-		public readonly DownloaderConfig Config;
+		public DownloaderConfig Config { get; private set; }
+		public ClientEngine Engine { get; private set; }
+
+		public Torrent TorrentFile { get; private set; }
+		public TorrentManager Manager { get; private set; }
+		public string TorrentPath { get; private set; }
+
+		private bool Ready { get; set; }
 
 		public TorrentDownloader()
 		{
@@ -39,29 +46,42 @@ namespace Client.Downloader
 			Engine = new(Config.Settings.engineSettings.ToSettings());
 		}
 
+		// Just works with CLI
 		public async Task StartDownloadAsync(string torrent_file)
 		{
-			var torrent = await Torrent.LoadAsync(torrent_file);
-			var manager = await Engine.AddAsync(torrent, Config.DownloadPath);
-			Console.WriteLine("InfoHash =>" + torrent.InfoHash.ToString());
-
+			if (!Ready)
+			{
+				throw new Exception("Torrent download is not ready");
+			}
+			
 			if (Config.Verbose)
 			{
-				manager.PeerConnected += (o, e) => Console.WriteLine($"Connection succeeded: {e.Peer.Uri}");
-				manager.ConnectionAttemptFailed += (o, e) => Console.WriteLine($"Connection failed: {e.Peer.ConnectionUri} - {e.Reason} - {e.Peer}");
-				manager.PeersFound += Manager_PeersFound;
+				Manager.PeerConnected += (o, e) => Console.WriteLine($"Connection succeeded: {e.Peer.Uri}");
+				Manager.ConnectionAttemptFailed += (o, e) => Console.WriteLine($"Connection failed: {e.Peer.ConnectionUri} - {e.Reason} - {e.Peer}");
+				Manager.PeersFound += Manager_PeersFound;
 			}
 
-			await manager.StartAsync();
+			await Manager.StartAsync();
 
 			StringBuilder sb = new(1024);
 			while (Engine.IsRunning)
 			{
 				sb.Remove(0, sb.Length);
 				sb.AppendFormat($"Transfer Rate: { Engine.TotalDownloadSpeed / 1024.0 }kb/s | { Engine.TotalUploadSpeed / 1024.0 }kb/s");
+
+				Console.Clear();
+				Console.WriteLine(sb);
 			}
 		}
 
+		public async Task SetupDownload(string torrent)
+		{
+			TorrentPath = torrent;
+			TorrentFile = Torrent.Load(TorrentPath);
+			Manager = await Engine.AddAsync(torrent, Config.DownloadPath);
+
+			Ready = true;
+		}
 
 		static void Manager_PeersFound(object sender, PeersAddedEventArgs e)
 		{
