@@ -6,20 +6,16 @@
         xmlns:local="clr-namespace:Client.GUI"
         mc:Ignorable="d" FontSize="14" FontFamily="Arial Narrow"
         Title="BitTorrentClient" Height="450" Width="800">
+    
     <Grid>
-
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
         <Menu IsMainMenu="True" Background="White" Foreground="Black">
@@ -36,6 +32,16 @@
             </MenuItem>
         </Menu>
 
+        <DataGrid x:Name="informationDisplay" AutoGenerateColumns="False" Grid.Row="1" Margin="5 5 5 0">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding FileName}" Header="FileName"/>
+                <DataGridTextColumn Binding="{Binding Status}" Header="Size"/>
+                <DataGridTextColumn Binding="{Binding Progress}" Header="Progress"/>
+                <DataGridTextColumn Binding="{Binding DownloadSpeed}" Header="DownloadSpeed"/>
+                <DataGridTextColumn Binding="{Binding UploadSpeeed}" Header="UploadSpeeed"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
         <DockPanel Grid.Column="0" Grid.Row="3">
             <Button x:Name="InfoButton"
                 Width="100" Height="20" Margin="5" HorizontalAlignment="Left" VerticalAlignment="Bottom"
@@ -48,6 +54,7 @@
                 Trackers
             </Button>
         </DockPanel>
+
     </Grid>
 
 </Window>
