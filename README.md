@@ -12,8 +12,6 @@ Both are independent, they're just different interfaces for the program.
 - [Usage (Core)](#usage-core)
 
 ## How to Install?
-  **Note:** Before installing check the [dependencies](#dependencies)
-
   * From source:
     ```
     $ git clone git@github.com:FallAngel1337/BitTorrentClient.git
@@ -69,11 +67,3 @@ Could not parse the arguments!
   * Basic usage:
     
     `./Client.Core -l <path_to_torrent_file>`
-
-## Dependencies
-  * .NET 5 Runtime
-  
-  **NOTE:** If you want to build from source you'll need those below:
-  * .NET 5 SDK
-  * [MonoTorrent](https://github.com/alanmcgovern/monotorrent/) package
-  * [CommandLineParser](https://github.com/commandlineparser/commandline) package
