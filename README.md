@@ -22,16 +22,28 @@ Both are independent, they're just different interfaces for the program.
     ```
     * Compiling the Core app:
     ```
-    $ cd Client/
+    $ cd Client.Core/
     $ dotnet publish -o <output_dir>
-    $ cd -o <output_dir>
-    $ dotnet run Client.dll --help # For Linux
+    $ cd -o <output_dir>/
+    $ dotnet Client.Core.dll --help # For Linux
     $ ./Client.exe --help # For Windows
     ```
     
   * From binary:
-  
-    **Not done yet**
+    * Linux:
+       * Download from [Releases](https://github.com/FallAngel1337/BitTorrentClient/releases)
+       ```
+       $ tar xvf linux-x64/
+       $ cd linux-x64
+       $ dotnet Client.Core.dll --help 
+       ```
+    * Windows:
+      * Download from [Releases](https://github.com/FallAngel1337/BitTorrentClient/releases)
+      * Extract the tarball
+      ```
+      $ cd windows-x64/
+      $ ./Client.Core.exe --help
+      ```
 
 ## Usage (Core)
    **TODO: Add a help function for better output**
@@ -57,9 +69,10 @@ Could not parse the arguments!
 
   * Basic usage:
     
-    `./Client -l <path_to_torrent_file>`
+    `./Client.Core -l <path_to_torrent_file>`
 
 ## Dependencies
-  * .NET 5
+  * .NET 5 Runtime
+  * .NET 5 SDK (**OPTIONAL**)
   * [MonoTorrent](https://github.com/alanmcgovern/monotorrent/) package
   * [CommandLineParser](https://github.com/commandlineparser/commandline) package
