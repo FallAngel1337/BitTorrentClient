@@ -33,7 +33,7 @@ Both are independent, they're just different interfaces for the program.
        * Download from [Releases](https://github.com/FallAngel1337/BitTorrentClient/releases)
        ```
        $ tar xvf linux-x64/
-       $ cd linux-x64
+       $ cd linux-x64/
        $ dotnet Client.Core.dll --help 
        ```
     * Windows:
@@ -46,7 +46,7 @@ Both are independent, they're just different interfaces for the program.
 
 ## Usage (Core)
    **TODO: Add a help function for better output**
-```./Client --help
+```./Client.Core --help
 Client 1.0.0
 Copyright (C) 2021 Client
 
