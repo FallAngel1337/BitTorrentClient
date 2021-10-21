@@ -39,6 +39,7 @@ Both are independent, they're just different interfaces for the program.
        ```
     * Windows:
       * Download from [Releases](https://github.com/FallAngel1337/BitTorrentClient/releases)
+      * Extract the tarball
       ```
       $ cd windows-x64/
       $ ./Client.Core.exe --help
@@ -68,7 +69,7 @@ Could not parse the arguments!
 
   * Basic usage:
     
-    `./Client -l <path_to_torrent_file>`
+    `./Client.Core -l <path_to_torrent_file>`
 
 ## Dependencies
   * .NET 5 Runtime
