@@ -8,7 +8,6 @@ It have two versions of it:
 Both are independent, they're just different interfaces for the program.
 
 - [How to Install?](#how-to-install)
-  - [Dependencies](#dependencies)
 - [Usage (Core)](#usage-core)
 
 ## How to Install?
