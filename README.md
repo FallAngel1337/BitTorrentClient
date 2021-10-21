@@ -69,7 +69,7 @@ Could not parse the arguments!
 
   * Basic usage:
     
-    `./Client -l <path_to_torrent_file>`
+    `./Client.Core -l <path_to_torrent_file>`
 
 ## Dependencies
   * .NET 5 Runtime
