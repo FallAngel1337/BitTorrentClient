@@ -39,6 +39,7 @@ Both are independent, they're just different interfaces for the program.
        ```
     * Windows:
       * Download from [Releases](https://github.com/FallAngel1337/BitTorrentClient/releases)
+      * Extract the tarball
       ```
       $ cd windows-x64/
       $ ./Client.Core.exe --help
