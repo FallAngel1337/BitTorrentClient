@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 using MonoTorrent;
 using MonoTorrent.Client;
-using System.Threading.Tasks;
-using MonoTorrent.BEncoding;
+
+using BencodeNET.Parsing;
+using BencodeNET.Objects;
+
+using Konsole;
+using System.IO;
 
 namespace Client.Downloader
 {
@@ -32,6 +38,8 @@ namespace Client.Downloader
 		public TorrentManager Manager { get; private set; }
 		public string TorrentPath { get; private set; }
 
+		private TorrentParser Parser;
+
 		private bool Ready { get; set; }
 
 		public TorrentDownloader()
@@ -46,12 +54,11 @@ namespace Client.Downloader
 			Engine = new(Config.Settings.engineSettings.ToSettings());
 		}
 
-		// Just works with CLI
 		public async Task StartDownloadAsync()
 		{
 			if (!Ready)
 			{
-				throw new Exception("Torrent download is not ready");
+				throw new Exception("Torrent setup isn't ready yet");
 			}
 			
 			if (Config.Verbose)
@@ -62,25 +69,25 @@ namespace Client.Downloader
 			}
 
 			await Manager.StartAsync();
+			var progressbar = new ProgressBar(1);
 
-			StringBuilder sb = new(1024);
 			while (Engine.IsRunning)
 			{
-				sb.Remove(0, sb.Length);
-				sb.AppendFormat($"Transfer Rate: { Engine.TotalDownloadSpeed / 1024.0 }kb/s | { Engine.TotalUploadSpeed / 1024.0 }kb/s");
 
-				Console.Clear();
-				Console.WriteLine(sb);
 			}
 		}
 
 		public async Task SetupDownload(string torrent)
 		{
 			TorrentPath = torrent;
+			
+			Parser = new(TorrentPath);
+			Parser.Parse();
+
 			TorrentFile = await Torrent.LoadAsync(TorrentPath);
 			Manager = await Engine.AddAsync(TorrentPath, Config.DownloadPath);
 
-			Ready = true;
+			Ready = false;
 		}
 
 		static void Manager_PeersFound(object sender, PeersAddedEventArgs e)
@@ -89,5 +96,64 @@ namespace Client.Downloader
 		}
 
 		static void Main(string[] args) { }
+	}
+
+	public class TorrentParser
+	{
+		private static readonly BencodeParser Parser = new();
+
+		public readonly string TorrentFile;
+
+		public string FileName { get; private set; }
+		public long FileSize { get; private set; }
+
+		private DateTimeOffset dateTimeOffset { get; set; }
+		public DateTime Date { get; private set; }
+		
+		public string Comment { get; private set; }
+		public string Author { get; private set; }
+		
+		private byte[] Hash { get; set; }
+		public string HashString { get; private set; }
+
+		public TorrentParser(string file) => TorrentFile = file;
+
+		public void Parse()
+		{
+			BDictionary parsed = Parser.Parse<BDictionary>(File.ReadAllBytes(TorrentFile));
+
+			Comment = parsed["comment"].ToString();
+			Author = parsed["created by"].ToString();
+			dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(parsed["creation date"].ToString()));
+			Date = dateTimeOffset.DateTime;
+
+			// File information
+			FileName = ((BDictionary)parsed["info"])["name"].ToString();
+			FileSize = Convert.ToInt64(((BDictionary)parsed["info"])["length"].ToString());
+			Hash = Encoding.UTF8.GetBytes(((BDictionary)parsed["info"])["pieces"].ToString());
+			HashString = ByteArrayToString(Hash);
+
+			Console.WriteLine($"Comment: { Comment }\nAuthor: { Author }\nDate: { Date }");
+			Console.WriteLine($"FileName: { FileName }");
+			Console.WriteLine($"FileSize: { FileSize }");
+			Console.WriteLine($"Hash: 0x{ HashString }");
+		}
+
+		private void GetHashes(byte[] bytes)
+		{
+			Hash = SHA1.Create().ComputeHash(bytes);
+			HashString = ByteArrayToString(Hash);
+		}
+
+		private static string ByteArrayToString(byte[] arrInput)
+		{
+			StringBuilder sOutput = new StringBuilder(arrInput.Length);
+			for (int i = 0; i < arrInput.Length; i++)
+			{
+				sOutput.Append(arrInput[i].ToString("x2"));
+			}
+			return sOutput.ToString();
+		}
+
 	}
 }
