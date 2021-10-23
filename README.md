@@ -27,7 +27,8 @@ Both are independent, they're just different interfaces for the program.
       $ ./Client.Core.exe --help
       ```
       
-   * From source:
+  * From source:
+   
     ```
     $ git clone git@github.com:FallAngel1337/BitTorrentClient.git
     $ cd BitTorrentClient/
