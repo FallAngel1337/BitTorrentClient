@@ -1,0 +1,60 @@
+﻿<Window x:Class="Client.GUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Client.GUI"
+        mc:Ignorable="d" FontSize="14" FontFamily="Arial Narrow"
+        Title="BitTorrentClient" Height="450" Width="800">
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Menu IsMainMenu="True" Background="White" Foreground="Black">
+            <MenuItem Header="_File">
+                <MenuItem x:Name="OpenFileOption" Header="Open File" Click="OpenFileOption_Click" />
+                <MenuItem x:Name="OpenMagnetLinkOption" Header="Open MagnetLink" Click="OpenMagnetLinkOption_Click" />
+                <Separator/>
+                <MenuItem Header="_Exit" Click="ExitOption_Click">
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Tools">
+                <MenuItem x:Name="TorrentCreatorOption" Header="Torrent creator" Click="TorrentCreatorOption_Click" />
+                <MenuItem x:Name="TorrentParserOption" Header="Torrent parser" Click="TorrentParserOption_Click" />
+            </MenuItem>
+        </Menu>
+
+        <DataGrid x:Name="informationDisplay" AutoGenerateColumns="False" Grid.Row="1" Margin="5 5 5 0">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding FileName}" Header="FileName"/>
+                <DataGridTextColumn Binding="{Binding Status}" Header="Size"/>
+                <DataGridTextColumn Binding="{Binding Progress}" Header="Progress"/>
+                <DataGridTextColumn Binding="{Binding DownloadSpeed}" Header="DownloadSpeed"/>
+                <DataGridTextColumn Binding="{Binding UploadSpeeed}" Header="UploadSpeeed"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <DockPanel Grid.Column="0" Grid.Row="3">
+            <Button x:Name="InfoButton"
+                Width="100" Height="20" Margin="5" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                Background="AliceBlue" Click="InformationButton_Click">
+                Information
+            </Button>
+            <Button x:Name="TrackersButton"
+                Width="100" Height="20" Margin="5" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                Background="AliceBlue" Click="TrackersButton_Click">
+                Trackers
+            </Button>
+        </DockPanel>
+
+    </Grid>
+
+</Window>
