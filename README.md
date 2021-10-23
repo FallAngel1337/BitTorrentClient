@@ -11,20 +11,6 @@ Both are independent, they're just different interfaces for the program.
 - [Usage (Core)](#usage-core)
 
 ## How to Install?
-  * From source:
-    ```
-    $ git clone git@github.com:FallAngel1337/BitTorrentClient.git
-    $ cd BitTorrentClient/
-    ```
-    * Compiling the Core app:
-    ```
-    $ cd Client.Core/
-    $ dotnet publish -o <output_dir>
-    $ cd -o <output_dir>/
-    $ dotnet Client.Core.dll --help # For Linux
-    $ ./Client.exe --help # For Windows
-    ```
-    
   * From binary:
     * Linux:
        * Download from [Releases](https://github.com/FallAngel1337/BitTorrentClient/releases)
@@ -40,6 +26,21 @@ Both are independent, they're just different interfaces for the program.
       $ cd windows-x64/
       $ ./Client.Core.exe --help
       ```
+      
+   * From source:
+    ```
+    $ git clone git@github.com:FallAngel1337/BitTorrentClient.git
+    $ cd BitTorrentClient/
+    ```
+    * Compiling the Core app:
+    ```
+    $ cd Client.Core/
+    $ dotnet publish -o <output_dir>
+    $ cd -o <output_dir>/
+    $ dotnet Client.Core.dll --help # For Linux
+    $ ./Client.Core.exe --help # For Windows
+    ```
+    
 
 ## Usage (Core)
    **TODO: Add a help function for better output**
@@ -65,4 +66,4 @@ Could not parse the arguments!
 
   * Basic usage:
     
-    `./Client.Core -l <path_to_torrent_file>`
+    `./Client.Core.exe -l <path_to_torrent_file>`
