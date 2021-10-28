@@ -10,6 +10,8 @@ using MonoTorrent.Logging;
 using CommandLine;
 using Error = CommandLine.Error;
 
+using Konsole;
+
 using Client.Downloader;
 
 namespace Client.Core
@@ -43,14 +45,25 @@ namespace Client.Core
 			TorrentDownloader downloader = new(config);
 
 			await downloader.SetupDownload(opts.Torrent);
+
+			var progressbar = new ProgressBar((int)downloader.Parser.FileSize);
+			var progress = new Progress<int>((percent) => progressbar.Refresh(percent, "#"));
+
 			try
 			{
-				await downloader.StartDownloadAsync();
+				var watch = System.Diagnostics.Stopwatch.StartNew();
+				
+				await downloader.StartDownloadAsync(progress);
+				watch.Stop();
+				
+				var elapsed = DateTimeOffset.FromUnixTimeMilliseconds(watch.ElapsedMilliseconds).DateTime;
+				Console.WriteLine($"Total Download Time: { elapsed.ToString("HH:mm:ss") }");
 			}
 			catch (Exception ex)
 			{
 				Console.WriteLine($"Download CANCELLED :: { ex.Message }");
 			}
+
 		}
 
 		static void HandleNotParsed(IEnumerable<Error> error)
