@@ -38,7 +38,7 @@ namespace Client.Downloader
 		public TorrentManager Manager { get; private set; }
 		public string TorrentPath { get; private set; }
 
-		private TorrentParser Parser;
+		private static TorrentParser Parser;
 
 		private bool Ready { get; set; }
 
@@ -68,13 +68,18 @@ namespace Client.Downloader
 				Manager.PeersFound += Manager_PeersFound;
 			}
 
+
+
 			await Manager.StartAsync();
-			var progressbar = new ProgressBar(100);
+
+			var progressbar = new ProgressBar((int)Parser.FileSize);
 
 			while (Engine.IsRunning)
 			{
-				progressbar.Refresh(10, "#");
-				System.Threading.Thread.Sleep(1000);
+				foreach (TorrentManager manager in Engine.Torrents)
+				{
+					progressbar.Refresh((int)(manager.Monitor.DataBytesDownloaded), "#"); ;
+				}
 			}
 		}
 
@@ -85,10 +90,23 @@ namespace Client.Downloader
 			Parser = new(TorrentPath);
 			Parser.Parse();
 
+			Parser.ShowParsed();
+			Console.WriteLine($"\nDestination folder: { Config.DownloadPath }");
+
+			Console.Write("\nDo you want to proceed with the download?[Y/N] ");
+			string input = Console.ReadLine().Trim().ToUpper();
+			if (!input.StartsWith("Y"))
+			{
+				Console.WriteLine("Stopping Downlonad ...");
+				Ready = false;
+				return;
+			}
+
+
 			TorrentFile = await Torrent.LoadAsync(TorrentPath);
 			Manager = await Engine.AddAsync(TorrentPath, Config.DownloadPath);
 
-			Ready = false;
+			Ready = true;
 		}
 
 		static void Manager_PeersFound(object sender, PeersAddedEventArgs e)
@@ -133,14 +151,19 @@ namespace Client.Downloader
 			FileSize = Convert.ToInt64(((BDictionary)parsed["info"])["length"].ToString());
 			Hash = SHA1.Create().ComputeHash(((BDictionary)parsed["info"]).EncodeAsBytes());
 			HashString = ByteArrayToString(Hash);
+		}
 
+		public void ShowParsed()
+		{
+			Console.WriteLine("\nTorrent Information:");
+			Console.WriteLine($"File: { TorrentFile }");
 			Console.WriteLine($"Comment: { Comment }\nAuthor: { Author }\nDate: { Date }");
 			Console.WriteLine($"FileName: { FileName }");
 			Console.WriteLine($"FileSize: { FileSize }");
 			Console.WriteLine($"Hash: 0x{ HashString }");
 		}
 
-		private void GetHashes(byte[] bytes)
+			private void GetHashes(byte[] bytes)
 		{
 			Hash = SHA1.Create().ComputeHash(bytes);
 			HashString = ByteArrayToString(Hash);
