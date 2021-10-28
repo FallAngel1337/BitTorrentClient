@@ -10,7 +10,6 @@ using MonoTorrent.Client;
 using BencodeNET.Parsing;
 using BencodeNET.Objects;
 
-using Konsole;
 using System.IO;
 
 namespace Client.Downloader
@@ -31,14 +30,15 @@ namespace Client.Downloader
 
 	public class TorrentDownloader
 	{
-		public DownloaderConfig Config { get; private set; }
-		public ClientEngine Engine { get; private set; }
+		public TorrentParser Parser;
 
-		public Torrent TorrentFile { get; private set; }
-		public TorrentManager Manager { get; private set; }
+		private readonly DownloaderConfig Config;
+		private readonly ClientEngine Engine;
+
+		private Torrent TorrentFile { get; set; }
+		private TorrentManager Manager { get; set; }
+
 		public string TorrentPath { get; private set; }
-
-		private static TorrentParser Parser;
 
 		private bool Ready { get; set; }
 
@@ -54,7 +54,7 @@ namespace Client.Downloader
 			Engine = new(Config.Settings.engineSettings.ToSettings());
 		}
 
-		public async Task StartDownloadAsync()
+		public async Task StartDownloadAsync(IProgress<int> download_progress)
 		{
 			if (!Ready)
 			{
@@ -68,17 +68,14 @@ namespace Client.Downloader
 				Manager.PeersFound += Manager_PeersFound;
 			}
 
-
-
 			await Manager.StartAsync();
-
-			var progressbar = new ProgressBar((int)Parser.FileSize);
 
 			while (Engine.IsRunning)
 			{
 				foreach (TorrentManager manager in Engine.Torrents)
 				{
-					progressbar.Refresh((int)(manager.Monitor.DataBytesDownloaded), "#"); ;
+					download_progress.Report((int)manager.Monitor.DataBytesDownloaded);
+					System.Threading.Thread.Sleep(100);
 				}
 			}
 		}
@@ -97,11 +94,10 @@ namespace Client.Downloader
 			string input = Console.ReadLine().Trim().ToUpper();
 			if (!input.StartsWith("Y"))
 			{
-				Console.WriteLine("Stopping Downlonad ...");
+				Console.WriteLine("Stopping Download ...");
 				Ready = false;
 				return;
 			}
-
 
 			TorrentFile = await Torrent.LoadAsync(TorrentPath);
 			Manager = await Engine.AddAsync(TorrentPath, Config.DownloadPath);
