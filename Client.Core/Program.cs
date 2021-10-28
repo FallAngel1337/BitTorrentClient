@@ -43,7 +43,14 @@ namespace Client.Core
 			TorrentDownloader downloader = new(config);
 
 			await downloader.SetupDownload(opts.Torrent);
-			await downloader.StartDownloadAsync();
+			try
+			{
+				await downloader.StartDownloadAsync();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Download CANCELLED :: { ex.Message }");
+			}
 		}
 
 		static void HandleNotParsed(IEnumerable<Error> error)
