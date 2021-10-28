@@ -75,7 +75,14 @@ namespace Client.Downloader
 				foreach (TorrentManager manager in Engine.Torrents)
 				{
 					download_progress.Report((int)manager.Monitor.DataBytesDownloaded);
+					//Console.WriteLine($"==> { manager.Monitor.DataBytesDownloaded } / { Parser.FileSize } >> { Parser.FileSize - manager.Monitor.DataBytesDownloaded }");
 					System.Threading.Thread.Sleep(100);
+					//Console.Clear();
+					
+					if (manager.Monitor.DataBytesDownloaded >= Parser.FileSize)
+					{
+						return;
+					}
 				}
 			}
 		}
