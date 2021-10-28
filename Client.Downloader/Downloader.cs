@@ -69,11 +69,12 @@ namespace Client.Downloader
 			}
 
 			await Manager.StartAsync();
-			var progressbar = new ProgressBar(1);
+			var progressbar = new ProgressBar(100);
 
 			while (Engine.IsRunning)
 			{
-
+				progressbar.Refresh(10, "#");
+				System.Threading.Thread.Sleep(1000);
 			}
 		}
 
@@ -130,7 +131,7 @@ namespace Client.Downloader
 			// File information
 			FileName = ((BDictionary)parsed["info"])["name"].ToString();
 			FileSize = Convert.ToInt64(((BDictionary)parsed["info"])["length"].ToString());
-			Hash = Encoding.UTF8.GetBytes(((BDictionary)parsed["info"])["pieces"].ToString());
+			Hash = SHA1.Create().ComputeHash(((BDictionary)parsed["info"]).EncodeAsBytes());
 			HashString = ByteArrayToString(Hash);
 
 			Console.WriteLine($"Comment: { Comment }\nAuthor: { Author }\nDate: { Date }");
