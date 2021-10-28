@@ -8,14 +8,27 @@ It have two versions of it:
 Both are independent, they're just different interfaces for the program.
 
 - [How to Install?](#how-to-install)
-  - [Dependencies](#dependencies)
 - [Usage (Core)](#usage-core)
 
 ## How to Install?
-
+  * From binary:
+    * Linux:
+       * Download from [Releases](https://github.com/FallAngel1337/BitTorrentClient/releases)
+       ```
+       $ tar xvf linux-x64/
+       $ cd linux-x64/
+       $ dotnet Client.Core.dll --help 
+       ```
+    * Windows:
+      * Download from [Releases](https://github.com/FallAngel1337/BitTorrentClient/releases)
+      * Extract the tarball
+      ```
+      $ cd windows-x64/
+      $ ./Client.Core.exe --help
+      ```
+      
   * From source:
- 
-    **Note:** Before installing chekc the [dependencies](#dependencies)
+   
     ```
     $ git clone git@github.com:FallAngel1337/BitTorrentClient.git
     $ cd BitTorrentClient/
@@ -26,28 +39,13 @@ Both are independent, they're just different interfaces for the program.
     $ dotnet publish -o <output_dir>
     $ cd -o <output_dir>/
     $ dotnet Client.Core.dll --help # For Linux
-    $ ./Client.exe --help # For Windows
+    $ ./Client.Core.exe --help # For Windows
     ```
     
-  * From binary:
-    * Linux:
-       * Download from [Releases](https://github.com/FallAngel1337/BitTorrentClient/releases)
-       ```
-       $ tar xvf linux-x64/
-       $ cd linux-x64
-       $ dotnet Client.Core.dll --help 
-       ```
-    * Windows:
-      * Download from [Releases](https://github.com/FallAngel1337/BitTorrentClient/releases)
-      * Extract the tarball
-      ```
-      $ cd windows-x64/
-      $ ./Client.Core.exe --help
-      ```
 
 ## Usage (Core)
    **TODO: Add a help function for better output**
-```./Client --help
+```./Client.Core --help
 Client 1.0.0
 Copyright (C) 2021 Client
 
@@ -69,10 +67,4 @@ Could not parse the arguments!
 
   * Basic usage:
     
-    `./Client.Core -l <path_to_torrent_file>`
-
-## Dependencies
-  * .NET 5 Runtime
-  * .NET 5 SDK (**OPTIONAL**)
-  * [MonoTorrent](https://github.com/alanmcgovern/monotorrent/) package
-  * [CommandLineParser](https://github.com/commandlineparser/commandline) package
+    `./Client.Core.exe -l <path_to_torrent_file>`
