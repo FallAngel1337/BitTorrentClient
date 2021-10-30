@@ -32,35 +32,39 @@ namespace Client.Downloader
 	{
 		public TorrentParser Parser;
 
-		private readonly DownloaderConfig Config;
+		public readonly DownloaderConfig Config;
 		private readonly ClientEngine Engine;
 
 		private Torrent TorrentFile { get; set; }
 		private TorrentManager Manager { get; set; }
 
-		public string TorrentPath { get; private set; }
+		public readonly string TorrentPath;
 
-		private bool Ready { get; set; }
-
-		public TorrentDownloader()
+		public TorrentDownloader(string torrent)
 		{
+			TorrentPath = torrent;
+			Parser = new(TorrentPath);
+			Parser.Parse();
+
 			Config = new(Environment.CurrentDirectory, false, new Settings());
 			Engine = new(Config.Settings.engineSettings.ToSettings());
 		}
 
-		public TorrentDownloader(DownloaderConfig config)
+		public TorrentDownloader(string torrent, DownloaderConfig config)
 		{
+			TorrentPath = torrent;
+			Parser = new(TorrentPath);
+			Parser.Parse();
+
 			Config = config;
 			Engine = new(Config.Settings.engineSettings.ToSettings());
 		}
 
 		public async Task StartDownloadAsync(IProgress<int> download_progress)
 		{
-			if (!Ready)
-			{
-				throw new Exception("Torrent setup isn't ready yet");
-			}
-			
+			TorrentFile = await Torrent.LoadAsync(TorrentPath);
+			Manager = await Engine.AddAsync(TorrentFile, Config.DownloadPath);
+
 			if (Config.Verbose)
 			{
 				Manager.PeerConnected += (o, e) => Console.WriteLine($"Connection succeeded: {e.Peer.Uri}");
@@ -74,42 +78,19 @@ namespace Client.Downloader
 			{
 				foreach (TorrentManager manager in Engine.Torrents)
 				{
-					download_progress.Report((int)manager.Monitor.DataBytesDownloaded);
-					//Console.WriteLine($"==> { manager.Monitor.DataBytesDownloaded } / { Parser.FileSize } >> { Parser.FileSize - manager.Monitor.DataBytesDownloaded }");
-					System.Threading.Thread.Sleep(100);
-					//Console.Clear();
-					
+					// Console.WriteLine($"==> { manager.Monitor.DataBytesDownloaded } / { Parser.FileSize } >> { Parser.FileSize - manager.Monitor.DataBytesDownloaded }");
+					// Console.Clear();
+
 					if (manager.Monitor.DataBytesDownloaded >= Parser.FileSize)
 					{
 						return;
 					}
+
+					System.Threading.Thread.Sleep(100);
+					download_progress.Report((int)manager.Monitor.DataBytesDownloaded);
+
 				}
 			}
-		}
-
-		public async Task SetupDownload(string torrent)
-		{
-			TorrentPath = torrent;
-			
-			Parser = new(TorrentPath);
-			Parser.Parse();
-
-			Parser.ShowParsed();
-			Console.WriteLine($"\nDestination folder: { Config.DownloadPath }");
-
-			Console.Write("\nDo you want to proceed with the download?[Y/N] ");
-			string input = Console.ReadLine().Trim().ToUpper();
-			if (!input.StartsWith("Y"))
-			{
-				Console.WriteLine("Stopping Download ...");
-				Ready = false;
-				return;
-			}
-
-			TorrentFile = await Torrent.LoadAsync(TorrentPath);
-			Manager = await Engine.AddAsync(TorrentPath, Config.DownloadPath);
-
-			Ready = true;
 		}
 
 		static void Manager_PeersFound(object sender, PeersAddedEventArgs e)
@@ -126,47 +107,57 @@ namespace Client.Downloader
 
 		public readonly string TorrentFile;
 
-		public string FileName { get; private set; }
-		public long FileSize { get; private set; }
+		// Torrent information
+		public string Comment { get; private set; }
+		public string Author { get; private set; }
 
 		private DateTimeOffset dateTimeOffset { get; set; }
 		public DateTime Date { get; private set; }
-		
-		public string Comment { get; private set; }
-		public string Author { get; private set; }
-		
+
 		private byte[] Hash { get; set; }
 		public string HashString { get; private set; }
 
-		public TorrentParser(string file) => TorrentFile = file;
+		public readonly Dictionary<string, long> Files = new();
+
+		public TorrentParser(string file)
+		{
+			TorrentFile = file;
+		}
 
 		public void Parse()
 		{
 			BDictionary parsed = Parser.Parse<BDictionary>(File.ReadAllBytes(TorrentFile));
 
-			Comment = parsed["comment"].ToString();
-			Author = parsed["created by"].ToString();
-			dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(parsed["creation date"].ToString()));
+			Comment = parsed["comment"]?.ToString();
+			Author = parsed["created by"]?.ToString();
+			dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(parsed["creation date"]?.ToString()));
 			Date = dateTimeOffset.DateTime;
-
-			// File information
-			FileName = ((BDictionary)parsed["info"])["name"].ToString();
-			FileSize = Convert.ToInt64(((BDictionary)parsed["info"])["length"].ToString());
 			Hash = SHA1.Create().ComputeHash(((BDictionary)parsed["info"]).EncodeAsBytes());
 			HashString = ByteArrayToString(Hash);
+				
+			foreach (BDictionary file in (BList)((BDictionary)parsed["info"])["files"])
+			{
+				foreach (var i in (BList)file["path"])
+				{
+					Files[i.ToString()] = Convert.ToInt64(file["length"].ToString());
+				}
+			}
 		}
 
 		public void ShowParsed()
 		{
 			Console.WriteLine("\nTorrent Information:");
-			Console.WriteLine($"File: { TorrentFile }");
+			Console.WriteLine($"Torrent: { TorrentFile }");
 			Console.WriteLine($"Comment: { Comment }\nAuthor: { Author }\nDate: { Date }");
-			Console.WriteLine($"FileName: { FileName }");
-			Console.WriteLine($"FileSize: { FileSize }");
 			Console.WriteLine($"Hash: 0x{ HashString }");
+			Console.WriteLine($"File(s) | Size ");
+			foreach (var file in Files)
+			{
+				Console.WriteLine($"{ file.Key } | { file.Value }");
+			}
 		}
 
-			private void GetHashes(byte[] bytes)
+		private void GetHashes(byte[] bytes)
 		{
 			Hash = SHA1.Create().ComputeHash(bytes);
 			HashString = ByteArrayToString(Hash);
