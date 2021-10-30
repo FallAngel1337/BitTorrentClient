@@ -15,7 +15,7 @@ Both are independent, they're just different interfaces for the program.
     * Linux:
        * Download from [Releases](https://github.com/FallAngel1337/BitTorrentClient/releases)
        ```
-       $ tar xvf linux-x64/
+       $ tar xvf linux-x64.tar
        $ cd linux-x64/
        $ dotnet Client.Core.dll --help 
        ```
