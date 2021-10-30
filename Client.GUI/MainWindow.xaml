@@ -32,13 +32,10 @@
             </MenuItem>
         </Menu>
 
-        <DataGrid x:Name="informationDisplay" AutoGenerateColumns="False" Grid.Row="1" Margin="5 5 5 0">
+        <DataGrid x:Name="informationDisplay" AutoGenerateColumns="False" Grid.Row="1" Margin="5">
             <DataGrid.Columns>
                 <DataGridTextColumn Binding="{Binding FileName}" Header="FileName"/>
-                <DataGridTextColumn Binding="{Binding Status}" Header="Size"/>
-                <DataGridTextColumn Binding="{Binding Progress}" Header="Progress"/>
-                <DataGridTextColumn Binding="{Binding DownloadSpeed}" Header="DownloadSpeed"/>
-                <DataGridTextColumn Binding="{Binding UploadSpeeed}" Header="UploadSpeeed"/>
+                <DataGridTextColumn Binding="{Binding FileSize}" Header="Size"/>
             </DataGrid.Columns>
         </DataGrid>
 
@@ -53,6 +50,10 @@
                 Background="AliceBlue" Click="TrackersButton_Click">
                 Trackers
             </Button>
+
+            <Grid Margin="10">
+                <ProgressBar Height="15" Minimum="0" Maximum="100" Name="pbStatus" />
+            </Grid>
         </DockPanel>
 
     </Grid>

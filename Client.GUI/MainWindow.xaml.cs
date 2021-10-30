@@ -24,7 +24,7 @@ namespace Client.GUI
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		private readonly List<DownloadInfo> DownloadInfos = new();
+		private List<TorrentParser> torrentParsers = new();
 
 		public MainWindow()
 		{
@@ -35,49 +35,51 @@ namespace Client.GUI
 		{
 			System.Windows.Forms.FileDialog openFileDlg = new System.Windows.Forms.OpenFileDialog();
 			var result = openFileDlg.ShowDialog();
-			var progress = new Progress<DownloadInfo[]>((a) => informationDisplay.ItemsSource = a);
+			informationDisplay.ItemsSource = torrentParsers;
 
 			if (result.ToString() != string.Empty)
 			{
 				try
 				{
-					await Task.Factory.StartNew(() => StartGUIDownloadAsync(openFileDlg.FileName, progress), TaskCreationOptions.LongRunning);
+					var parsed = new TorrentParser(openFileDlg.FileName);
+					parsed.Parse();
+
+					torrentParsers.Add(parsed);
+					informationDisplay.Items.Refresh();
+
+					pbStatus.Maximum = parsed.FileSize;
+
+					var progress = new Progress<int>(total => pbStatus.Value = total);
+
+					await Task.Run(() => StartDownloadAsync(openFileDlg.FileName, progress));
 				}
 				catch (Exception ex)
 				{
 					System.Windows.MessageBox.Show($"Got an ERROR while downloading! { ex }");
 				}
 			}
-
 		}
 
-		private async Task StartGUIDownloadAsync(string torrent, IProgress<DownloadInfo[]> progress)
+		private async Task StartDownloadAsync(string torrent, IProgress<int> progress)
 		{
 
-			TorrentDownloader downloader = new();
-			await downloader.SetupDownload(torrent);
+			Settings settings = new(SettingsOpts.AllowPortForwarding | SettingsOpts.AutoSaveLoadDhtCache |
+						         SettingsOpts.AutoSaveLoadFastResume | SettingsOpts.AutoSaveLoadMagnetLinkMetadata);
 
-			await downloader.Manager.StartAsync();
+			DownloaderConfig config = new(Environment.CurrentDirectory, false, settings);
+			TorrentDownloader downloader = new(torrent, config);
 
-			DownloadInfos.Add(new DownloadInfo
+			try
 			{
-				FileName = downloader.TorrentFile.Name,
-				Size = downloader.TorrentFile.Size,
-				Progress = 0, //  stuck in 0% for testing
-				DownloadSpeed = 0,
-				UploadSpeed = 0
-			});
-
-			// TODO: IMPROVE THIS ASAP (but it's working =])
-			int i = 0;
-			while (downloader.Engine.IsRunning)
-			{
-				DownloadInfos[i % DownloadInfos.Count].DownloadSpeed = downloader.Engine.TotalDownloadSpeed / 1024;
-				DownloadInfos[i++ % DownloadInfos.Count].UploadSpeed = downloader.Engine.TotalUploadSpeed / 1024;
-				
-				Task.Delay(1000).Wait();
-				progress.Report(DownloadInfos.ToArray());
+				await downloader.StartDownloadAsync(progress);
 			}
+			catch (Exception ex)
+			{
+				System.Windows.MessageBox.Show($"ERROR :: { ex.Message } | { ex }");
+			}
+
+			System.Windows.MessageBox.Show("Download Done!");
+			pbStatus.Value = 0;
 		}
 
 		private void OpenMagnetLinkOption_Click(object sender, RoutedEventArgs e)
