@@ -32,39 +32,35 @@ namespace Client.Downloader
 	{
 		public TorrentParser Parser;
 
-		public readonly DownloaderConfig Config;
-		private readonly ClientEngine Engine;
+		public DownloaderConfig Config { get; private set; }
+		private ClientEngine Engine { get; set; }
 
 		private Torrent TorrentFile { get; set; }
 		private TorrentManager Manager { get; set; }
 
-		public readonly string TorrentPath;
+		public string TorrentPath { get; private set; }
 
-		public TorrentDownloader(string torrent)
+		public int Num { get; private set; }
+		public long TotalSize { get; private set; }
+
+		public async Task CreateDownloader(string torrent, DownloaderConfig? config = null)
 		{
 			TorrentPath = torrent;
 			Parser = new(TorrentPath);
 			Parser.Parse();
 
-			Config = new(Environment.CurrentDirectory, false, new Settings());
+			Config = config ?? new(Environment.CurrentDirectory, false, new Settings());
 			Engine = new(Config.Settings.engineSettings.ToSettings());
-		}
 
-		public TorrentDownloader(string torrent, DownloaderConfig config)
-		{
-			TorrentPath = torrent;
-			Parser = new(TorrentPath);
-			Parser.Parse();
+			TorrentFile = await Torrent.LoadAsync(TorrentPath);
+			Manager = await Engine.AddAsync(TorrentFile, Config.DownloadPath);
 
-			Config = config;
-			Engine = new(Config.Settings.engineSettings.ToSettings());
+			TotalSize = Manager.Torrent.Size;
+			Num = Manager.Torrent.Files.Count;
 		}
 
 		public async Task StartDownloadAsync(IProgress<int> download_progress)
 		{
-			TorrentFile = await Torrent.LoadAsync(TorrentPath);
-			Manager = await Engine.AddAsync(TorrentFile, Config.DownloadPath);
-
 			if (Config.Verbose)
 			{
 				Manager.PeerConnected += (o, e) => Console.WriteLine($"Connection succeeded: {e.Peer.Uri}");
@@ -76,20 +72,13 @@ namespace Client.Downloader
 
 			while (Engine.IsRunning)
 			{
-				foreach (TorrentManager manager in Engine.Torrents)
+				if (Manager.Monitor.DataBytesDownloaded >= Manager.Torrent.Size)
 				{
-					// Console.WriteLine($"==> { manager.Monitor.DataBytesDownloaded } / { Parser.FileSize } >> { Parser.FileSize - manager.Monitor.DataBytesDownloaded }");
-					// Console.Clear();
-
-					if (manager.Monitor.DataBytesDownloaded >= Parser.FileSize)
-					{
-						return;
-					}
-
-					System.Threading.Thread.Sleep(100);
-					download_progress.Report((int)manager.Monitor.DataBytesDownloaded);
-
+					return;
 				}
+
+				download_progress.Report((int)Manager.Monitor.DataBytesDownloaded);
+				System.Threading.Thread.Sleep(100);
 			}
 		}
 
