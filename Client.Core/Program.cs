@@ -13,6 +13,7 @@ using Error = CommandLine.Error;
 using Konsole;
 
 using Client.Downloader;
+using System.Collections.Concurrent;
 
 namespace Client.Core
 {
@@ -42,18 +43,33 @@ namespace Client.Core
 				                    SettingsOpts.AutoSaveLoadFastResume | SettingsOpts.AutoSaveLoadMagnetLinkMetadata);
 
 			DownloaderConfig  config = new(opts.Download, opts.Verbose, settings);
-			TorrentDownloader downloader = new(config);
+			TorrentDownloader downloader = new();
 
-			await downloader.SetupDownload(opts.Torrent);
+			await downloader.InitDownloader(opts.Torrent, config);
 
-			var progressbar = new ProgressBar((int)downloader.Parser.FileSize);
-			var progress = new Progress<int>((percent) => progressbar.Refresh(percent, "#"));
+			downloader.Parser.ShowParsed();
+			Console.WriteLine($"\nDestination folder: { downloader.Config.DownloadPath }");
+			Console.WriteLine($"Total Space Required: { downloader.TotalSize }");
+			Console.Write("\nDo you want to proceed with the download?[Y/N] ");
+			string input = Console.ReadLine().Trim().ToUpper();
+			if (!input.StartsWith("Y"))
+			{
+				Console.WriteLine("Stopping Download ...");
+				return;
+			}
+
+			var tasks = new List<Task>();
+			var bars = new ConcurrentBag<ProgressBar>();
 
 			try
 			{
 				var watch = System.Diagnostics.Stopwatch.StartNew();
-				
+				var progressbar = new ProgressBar((int)downloader.TotalBytesSize);
+				var progress = new Progress<int>((percent) => progressbar.Refresh(percent, "#"));
+
 				await downloader.StartDownloadAsync(progress);
+
+				Task.WaitAll(tasks.ToArray());
 				watch.Stop();
 				
 				var elapsed = DateTimeOffset.FromUnixTimeMilliseconds(watch.ElapsedMilliseconds).DateTime;

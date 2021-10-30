@@ -41,9 +41,13 @@ namespace Client.Downloader
 		public string TorrentPath { get; private set; }
 
 		public int Num { get; private set; }
-		public long TotalSize { get; private set; }
+		public string TotalSize { get; private set; }
+		public long TotalBytesSize { get; private set; }
 
-		public async Task CreateDownloader(string torrent, DownloaderConfig? config = null)
+		static readonly string[] SizeSuffixes =
+				  { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+
+		public async Task InitDownloader(string torrent, DownloaderConfig? config = null)
 		{
 			TorrentPath = torrent;
 			Parser = new(TorrentPath);
@@ -55,7 +59,8 @@ namespace Client.Downloader
 			TorrentFile = await Torrent.LoadAsync(TorrentPath);
 			Manager = await Engine.AddAsync(TorrentFile, Config.DownloadPath);
 
-			TotalSize = Manager.Torrent.Size;
+			TotalBytesSize = Manager.Torrent.Size;
+			TotalSize = SizeSuffix(TotalBytesSize);
 			Num = Manager.Torrent.Files.Count;
 		}
 
@@ -85,6 +90,22 @@ namespace Client.Downloader
 		static void Manager_PeersFound(object sender, PeersAddedEventArgs e)
 		{
 			Console.WriteLine($"Found {e.NewPeers} new peers and {e.ExistingPeers} existing peers");
+		}
+
+		// https://stackoverflow.com/questions/14488796/does-net-provide-an-easy-way-convert-bytes-to-kb-mb-gb-etc
+		public static string SizeSuffix(long value, int decimalPlaces = 1)
+		{
+			if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); }
+
+			int i = 0;
+			decimal dValue = (decimal)value;
+			while (Math.Round(dValue, decimalPlaces) >= 1000)
+			{
+				dValue /= 1024;
+				i++;
+			}
+
+			return string.Format("{0:n" + decimalPlaces + "} {1}", dValue, SizeSuffixes[i]);
 		}
 
 		static void Main(string[] args) { }
@@ -123,13 +144,20 @@ namespace Client.Downloader
 			Date = dateTimeOffset.DateTime;
 			Hash = SHA1.Create().ComputeHash(((BDictionary)parsed["info"]).EncodeAsBytes());
 			HashString = ByteArrayToString(Hash);
-				
-			foreach (BDictionary file in (BList)((BDictionary)parsed["info"])["files"])
+
+			try
 			{
-				foreach (var i in (BList)file["path"])
+				foreach (BDictionary file in (BList)((BDictionary)parsed["info"])["files"])
 				{
-					Files[i.ToString()] = Convert.ToInt64(file["length"].ToString());
+					foreach (var i in (BList)file["path"])
+					{
+						Files[i.ToString()] = Convert.ToInt64(file["length"].ToString());
+					}
 				}
+			}
+			catch (NullReferenceException)
+			{
+				Files[((BDictionary)parsed["info"])["name"].ToString()] = Convert.ToInt64(((BDictionary)parsed["info"])["length"].ToString());
 			}
 		}
 
@@ -139,17 +167,11 @@ namespace Client.Downloader
 			Console.WriteLine($"Torrent: { TorrentFile }");
 			Console.WriteLine($"Comment: { Comment }\nAuthor: { Author }\nDate: { Date }");
 			Console.WriteLine($"Hash: 0x{ HashString }");
-			Console.WriteLine($"File(s) | Size ");
+			Console.WriteLine($"File(s):");
 			foreach (var file in Files)
 			{
-				Console.WriteLine($"{ file.Key } | { file.Value }");
+				Console.WriteLine($"{ file.Key }  { TorrentDownloader.SizeSuffix(file.Value) }");
 			}
-		}
-
-		private void GetHashes(byte[] bytes)
-		{
-			Hash = SHA1.Create().ComputeHash(bytes);
-			HashString = ByteArrayToString(Hash);
 		}
 
 		private static string ByteArrayToString(byte[] arrInput)
